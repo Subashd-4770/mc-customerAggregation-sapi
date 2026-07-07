@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:oauth2-provider="http://www.mulesoft.org/schema/mule/oauth2-provider"
+	xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway"
+	xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns:snowflake="http://www.mulesoft.org/schema/mule/snowflake" xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/snowflake http://www.mulesoft.org/schema/mule/snowflake/current/mule-snowflake.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd
+http://www.mulesoft.org/schema/mule/oauth2-provider http://www.mulesoft.org/schema/mule/oauth2-provider/current/mule-oauth2-provider.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="58c8e593-a2e5-4c41-b19e-0b5134bec958" >
+		<http:listener-connection host="${http.host}" port="${http.port}" />
+	</http:listener-config>
+	<configuration-properties doc:name="Configuration properties" doc:id="1da17270-6280-4ad9-ba34-9822596ee88f" file="config\dev-api-properties.yaml" />
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="66a4f736-0e37-4408-a90c-8d1873512993" >
+		<db:generic-connection url="${db.url}" driverClassName="${db.driver-class-name}" user="${db.user}" password="${secure::db.password}" />
+	</db:config>
+	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="bfe269e3-8d0e-4c1b-8458-bfae1e5daa68" >
+		<salesforce:basic-connection username="${sf.username}" password="${secure::sf.password}" securityToken="${sf.security-token}" url="${sf.authorization-url}" />
+	</salesforce:sfdc-config>
+	<snowflake:snowflake-config name="Snowflake_Config" doc:name="Snowflake Config" doc:id="24f5386b-c948-41ce-bf2a-debdf9be01e7" >
+		<snowflake:snowflake-connection accountName="${snowflake.account-name}" warehouse="${snowflake.warehouse}" database="${snowflake.database}" schema="${snowflake.schema}" user="${snowflake.user}" password="${secure::snowflake.password}" role="${snowflake.role}" />
+	</snowflake:snowflake-config>
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="b7460e5a-19a7-4cda-a355-427e5c1091fb" file="config\dev-api-properties.yaml" key="good@123" >
+		<secure-properties:encrypt algorithm="Blowfish" />
+	</secure-properties:config>
+	<api-gateway:autodiscovery apiId="21011344" ignoreBasePath="true" doc:name="API Autodiscovery" doc:id="67eeb408-8b23-48de-8125-41d1c9aec9ad" flowRef="mc-customeraggregation-sys-api-2-main" />
+</mule>
