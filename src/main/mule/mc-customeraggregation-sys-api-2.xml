@@ -1,0 +1,371 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:tracing="http://www.mulesoft.org/schema/mule/tracing" xmlns:email="http://www.mulesoft.org/schema/mule/email" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:snowflake="http://www.mulesoft.org/schema/mule/snowflake" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation=" http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd  http://www.mulesoft.org/schema/mule/snowflake http://www.mulesoft.org/schema/mule/snowflake/current/mule-snowflake.xsd http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd
+http://www.mulesoft.org/schema/mule/tracing http://www.mulesoft.org/schema/mule/tracing/current/mule-tracing.xsd">
+    <apikit:config name="mc-customeraggregation-sys-api-2-config" api="resource::ac41867f-8b63-4386-b266-b5d4d40602e5:mc-customeraggregation-sys-api:1.0.0:raml:zip:mc-customeraggregation-sys-api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+	<flow name="mc-customeraggregation-sys-api-2-main">
+        <http:listener config-ref="HTTP_Listener_config" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="mc-customeraggregation-sys-api-2-config" />
+		<error-handler>
+            <on-error-propagate type="APIKIT:BAD_REQUEST">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Bad request"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">400</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Method not allowed"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">405</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not acceptable"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">406</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Unsupported media type"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">415</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not Implemented"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">501</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="mc-customeraggregation-sys-api-2-console">
+        <http:listener config-ref="HTTP_Listener_config" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="mc-customeraggregation-sys-api-2-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="get:\getCustomerDetails\(customerId):mc-customeraggregation-sys-api-2-config">
+        <logger level="INFO" doc:name="Logger" doc:id="f0d673b8-0690-4011-906a-36971a69dd6a" message="#[&quot;Fetching Customer Details&quot;]" />
+        <set-variable value="#[attributes.uriParams.customerId]" doc:name="Set Variable" doc:id="4642db8f-84bf-4334-86b6-82b6bf17b7db" variableName="custId" />
+        <scatter-gather doc:name="Scatter-Gather" doc:id="79b3021f-4cb0-4d53-a5fe-bdb83e69f8d9" timeout="20000" target="cusDetails" maxConcurrency="5">
+            <route>
+                <try doc:name="Salesforce Try">
+                    <logger level="INFO" message="#[&quot;SalesForce Retrieve Started&quot;]" />
+                    <salesforce:query-all doc:name="Query all" doc:id="f777438f-28cd-471d-a5f2-49ebf15be869" config-ref="Salesforce_Config">
+                        <salesforce:salesforce-query><![CDATA[select customerId__c, Name, Id
+from Customer
+where customerId__c = ':customerId']]></salesforce:salesforce-query>
+                        <salesforce:parameters><![CDATA[#[{
+    customerId : vars.custId
+}]]]></salesforce:parameters>
+                    </salesforce:query-all>
+                    <logger level="INFO" message="#[&quot;SalesForce Retrieve Completed&quot;]" />
+                    <error-handler>
+                        <on-error-continue type="SALESFORCE:CONNECTIVITY">
+                            <logger level="ERROR" message="#[&quot;Salesforce Connectivity Error : &quot; ++ error.description]" />
+                            <ee:transform>
+                                <ee:message>
+                                    <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    success:false,
+    source:"Salesforce",
+    errorType:"CONNECTIVITY",
+    message:"Salesforce Connection Failed",
+    timestamp:now()
+}]]></ee:set-payload>
+                                </ee:message>
+                            </ee:transform>
+                        </on-error-continue>
+                    </error-handler>
+                </try>
+            </route>
+            <route>
+                <try doc:name="Database Try">
+                    <logger level="INFO" message="#[&quot;Database Retrieve Started&quot;]" />
+                    <db:select config-ref="Database_Config" doc:name="Retrieve Orders">
+                        <db:sql><![CDATA[SELECT *
+FROM orders
+WHERE customerId = :customerId]]></db:sql>
+                        <db:input-parameters><![CDATA[#[{
+    customerId : vars.custId
+}]]]></db:input-parameters>
+                    </db:select>
+                    <logger level="INFO" message="#[&quot;Database Retrieve Completed&quot;]" />
+                    <error-handler>
+                        <on-error-continue type="DB:CONNECTIVITY">
+                            <logger level="ERROR" message="#[&quot;Database Connectivity Error&quot;]" />
+                            <ee:transform>
+                                <ee:message>
+                                    <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    success:false,
+    source:"Database",
+    errorType:"CONNECTIVITY",
+    message:"Database Connection Failed",
+    timestamp:now()
+}]]></ee:set-payload>
+                                </ee:message>
+                            </ee:transform>
+                        </on-error-continue>
+                        <on-error-continue type="DB:QUERY_EXECUTION">
+                            <logger level="ERROR" message="#[&quot;Query Execution Failed&quot;]" />
+                            <ee:transform>
+                                <ee:message>
+                                    <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    success:false,
+    source:"Database",
+    errorType:"QUERY",
+    message:"Database Query Failed",
+    timestamp:now()
+}]]></ee:set-payload>
+                                </ee:message>
+                            </ee:transform>
+                        </on-error-continue>
+                    </error-handler>
+                </try>
+            </route>
+            <route>
+                <try doc:name="Snowflake Try">
+                    <logger level="INFO" message="#[&quot;Snowflake Retrieve Started&quot;]" />
+                    <snowflake:select doc:name="Select" doc:id="c678d8a6-f5b3-4b6f-8f1d-76d267b5775c" config-ref="Snowflake_Config">
+                        <snowflake:sql><![CDATA[SELECT *
+FROM billing
+WHERE customerId = :customerId]]></snowflake:sql>
+                        <snowflake:input-parameters><![CDATA[#[{
+ customerId : vars.custId
+ }]]]></snowflake:input-parameters>
+                    </snowflake:select>
+                    <logger level="INFO" message="#[&quot;Snowflake Retrieve Completed&quot;]" />
+                    <error-handler>
+                        <on-error-continue type="SNOWFLAKE:CONNECTIVITY">
+                            <logger level="ERROR" message="#[&quot;Snowflake Connectivity Error&quot;]" />
+                            <ee:transform>
+                                <ee:message>
+                                    <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    success:false,
+    source:"Snowflake",
+    errorType:"CONNECTIVITY",
+    message:"Snowflake Connection Failed",
+    timestamp:now()
+}]]></ee:set-payload>
+                                </ee:message>
+                            </ee:transform>
+                        </on-error-continue>
+                        <on-error-continue type="SNOWFLAKE:QUERY_EXECUTION">
+                            <logger level="ERROR" message="#[&quot;Snowflake Query Failed&quot;]" />
+                            <ee:transform>
+                                <ee:message>
+                                    <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    success:false,
+    source:"Snowflake",
+    errorType:"QUERY",
+    message:"Snowflake Query Execution Failed",
+    timestamp:now()
+}]]></ee:set-payload>
+                                </ee:message>
+                            </ee:transform>
+                        </on-error-continue>
+                    </error-handler>
+                </try>
+            </route>
+        </scatter-gather>
+        <tracing:with-correlation-id doc:name="With CorrelationID" doc:id="b5663891-a94d-474e-9f4c-ddb4f617f55d" correlationId='#[correlationId ++ " - Example"]'>
+			<logger level="INFO" doc:name="Logger" doc:id="5fc1ba46-c03e-41b1-b30f-2dd80cc91f38" message="#[cusDetails]"/>
+		</tracing:with-correlation-id>
+		<ee:transform doc:name="Transform Message">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	status: true,
+	timeStamp: now(),
+	message: "Customer Aggregated Response",
+	customers: vars.cusDetails[0].payload,
+    orders: vars.cusDetails[1].payload,
+    billing: vars.cusDetails[2].payload
+	
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+        <logger level="INFO" doc:name="Logger" doc:id="d6b8e8b5-0058-45d1-9b65-642b7c717094" message="#[&quot;Customer Aggregation Completed&quot;]" />
+        <error-handler>
+            <on-error-propagate type="SALESFORCE:*" enableNotifications="true" logException="true" doc:name="Salesforce Error">
+                <set-variable variableName="httpStatus" value="503" />
+                <ee:transform doc:name="Salesforce Error Response">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    success: false,
+    status: 503,
+    timestamp: now(),
+    message: "Salesforce Service Unavailable",
+    error: error.description
+}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="DB:*" enableNotifications="true" logException="true" doc:name="Database Error">
+                <set-variable variableName="httpStatus" value="503" />
+                <ee:transform doc:name="Database Error Response">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    success: false,
+    status: 503,
+    timestamp: now(),
+    message: "Database Service Unavailable",
+    error: error.description
+}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="SNOWFLAKE:*" enableNotifications="true" logException="true" doc:name="Snowflake Error">
+                <set-variable variableName="httpStatus" value="503" />
+                <ee:transform doc:name="Snowflake Error Response">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    success: false,
+    status: 503,
+    timestamp: now(),
+    message: "Snowflake Service Unavailable",
+    error: error.description
+}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="MULE:TIMEOUT" enableNotifications="true" logException="true" doc:name="Scatter Gather Timeout">
+                <set-variable variableName="httpStatus" value="504" />
+                <ee:transform doc:name="Timeout Response">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    success: false,
+    status: 504,
+    timestamp: now(),
+    message: "Customer Aggregation Timed Out",
+    error: error.description
+}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="ANY" enableNotifications="true" logException="true" doc:name="Internal Server Error">
+                <set-variable variableName="httpStatus" value="500" />
+                <ee:transform doc:name="Internal Error Response">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    success: false,
+    status: 500,
+    timestamp: now(),
+    message: "Internal Server Error",
+    error: error.description
+}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+</mule>
